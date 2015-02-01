@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
+# Copyright 2015 Mickael Zerihoun
+# Collaborated with Jake Brand, Thomas Curnow
 # Copyright 2013 Abram Hindle
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,9 +40,11 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         # use sockets!
+        # If a port isn't provided connect to port 80
         if(not port):
             port = 80
 
+        # Initiate socket connection and return the socket
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         try:
             s.connect((host,port))
@@ -51,11 +55,13 @@ class HTTPClient(object):
     def get_code(self, data):  
         return code
 
+    # From the response, extract the code and return it
     def get_headers(self,data):
         header = data.split("\r\n\r\n", 1)[0]
         code = header.split(" ")[1]
         return code
 
+    # From the response, extract the body and return it
     def get_body(self, data):
         body = data.split("\r\n\r\n", 1)[1]
         return body
@@ -72,6 +78,7 @@ class HTTPClient(object):
                 done = not part
         return str(buffer)
 
+    # receive the url and parse out the host, path and port
     def GET(self, url, args=None):
        
         parsed_url = urlparse(url)
@@ -81,22 +88,27 @@ class HTTPClient(object):
 
         if(not path):
             path = "/"
-
+        # Construct the GET header
         get_rekt = "GET " + path + " HTTP/1.1\r\n"
         get_rekt += "Host:" + host + "\r\n"
         get_rekt += "Accept: */*\r\n"
         get_rekt += "Connection: close\r\n\r\n"
 
+        # Establish a connection
         sock = self.connect(host, port)
         sock.send(get_rekt)
 
+        # Retrieve the message
         returned_msg = self.recvall(sock)
         sock.close()
+
+        # Parse it and return it
         code = self.get_headers(returned_msg)
         body = self.get_body(returned_msg)
 
         return HTTPRequest(code, body)
 
+    # receive the url and parse out the host, path and port
     def POST(self, url, args=None):
 
         parsed_url = urlparse(url)
@@ -115,9 +127,7 @@ class HTTPClient(object):
             path = "/"
 
 
-
-
-        
+        # Construct the GET header
         post_req = "POST " + path + " HTTP/1.1\r\n"
         post_req += "Host:" + host + "\r\n"
         post_req += "Accept: */*\r\n"
@@ -126,19 +136,13 @@ class HTTPClient(object):
         post_req += "Connection: close\r\n\r\n"
         post_req += arg 
 
-        
-
-        
+        # Establish a connection
         sock = self.connect(host, port)
-        
         sock.send(post_req)
-
         
         returned_msg = self.recvall(sock)
-
-        
         sock.close()
-        
+        # Parse it and return it
         code = self.get_headers(returned_msg)
         body = self.get_body(returned_msg)    
 
