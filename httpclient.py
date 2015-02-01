@@ -23,13 +23,14 @@ import socket
 import re
 # you may use urllib to encode data appropriately
 import urllib
+from urlparse import urlparse
 
 def help():
     print "httpclient.py [GET/POST] [URL]\n"
 
 class HTTPRequest(object):
     def __init__(self, code=200, body=""):
-        self.code = code
+        self.code = int (code)
         self.body = body
 
 class HTTPClient(object):
@@ -37,16 +38,27 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         # use sockets!
-        return None
+        if(not port):
+            port = 80
 
-    def get_code(self, data):
-        return None
+        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        try:
+            s.connect((host,port))
+        except:
+            print "Did not bind on " + host + port
+        return s
+
+    def get_code(self, data):  
+        return code
 
     def get_headers(self,data):
-        return None
+        header = data.split("\r\n\r\n", 1)[0]
+        code = header.split(" ")[1]
+        return code
 
     def get_body(self, data):
-        return None
+        body = data.split("\r\n\r\n", 1)[1]
+        return body
 
     # read everything from the socket
     def recvall(self, sock):
@@ -61,13 +73,75 @@ class HTTPClient(object):
         return str(buffer)
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+       
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
+        path = parsed_url.path
+        port = parsed_url.port
+
+        if(not path):
+            path = "/"
+
+        get_rekt = "GET " + path + " HTTP/1.1\r\n"
+        get_rekt += "Host:" + host + "\r\n"
+        get_rekt += "Accept: */*\r\n"
+        get_rekt += "Connection: close\r\n\r\n"
+
+        sock = self.connect(host, port)
+        sock.send(get_rekt)
+
+        returned_msg = self.recvall(sock)
+        sock.close()
+        code = self.get_headers(returned_msg)
+        body = self.get_body(returned_msg)
+
         return HTTPRequest(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
+        path = parsed_url.path
+        port = parsed_url.port
+        size = 0
+        arg = ""
+        
+        if(args):
+            arg = urllib.urlencode(args)
+            #size = sys.getsizeof(arg)
+            size = len(arg)
+
+        if(not path):
+            path = "/"
+
+
+
+
+        
+        post_req = "POST " + path + " HTTP/1.1\r\n"
+        post_req += "Host:" + host + "\r\n"
+        post_req += "Accept: */*\r\n"
+        post_req += "Content-Length:" + str(size) + "\r\n"
+        post_req += "Content-Type: application/x-www-form-urlencoded\r\n"
+        post_req += "Connection: close\r\n\r\n"
+        post_req += arg 
+
+        
+
+        
+        sock = self.connect(host, port)
+        
+        sock.send(post_req)
+
+        
+        returned_msg = self.recvall(sock)
+
+        
+        sock.close()
+        
+        code = self.get_headers(returned_msg)
+        body = self.get_body(returned_msg)    
+
         return HTTPRequest(code, body)
 
     def command(self, url, command="GET", args=None):
@@ -78,11 +152,12 @@ class HTTPClient(object):
     
 if __name__ == "__main__":
     client = HTTPClient()
+    #client.GET("asdfasd")
     command = "GET"
     if (len(sys.argv) <= 1):
         help()
         sys.exit(1)
     elif (len(sys.argv) == 3):
-        print client.command( sys.argv[1], sys.argv[2] )
+        print client.command( sys.argv[2] ,sys.argv[1])
     else:
-        print client.command( command, sys.argv[1] )    
+        print client.command( sys.argv[1], command) 
