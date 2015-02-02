@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 # Copyright 2015 Mickael Zerihoun
-# Collaborated with Jake Brand, Thomas Curnow
+# Collaborated with Jake Brand, Thomas Curnow, Dylan Cassidy
 # Copyright 2013 Abram Hindle
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
