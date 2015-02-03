@@ -45,7 +45,7 @@ class HTTPClient(object):
             port = 80
 
         if(not host):
-            host = localhost
+            host = "localhost"
 
         # Initiate socket connection and return the socket
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
