@@ -44,12 +44,15 @@ class HTTPClient(object):
         if(not port):
             port = 80
 
+        if(not host):
+            host = localhost
+
         # Initiate socket connection and return the socket
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         try:
             s.connect((host,port))
         except:
-            print "Did not bind on " + host + port
+            print "Did not bind on " + host + str(port)
         return s
 
     def get_code(self, data):  
